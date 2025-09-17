@@ -8,10 +8,10 @@ edition = "2021"
 members = [".", ]
 
 [dependencies]
-sophia = "=0.8.0"
+sophia = "=0.9.0"
 time = "*"
 regex = "1.7.0"
-hdt = "=0.2.0"
+hdt = "=0.4.0"
 
 [profile.release]
 lto = "fat"

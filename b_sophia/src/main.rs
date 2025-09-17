@@ -1,5 +1,5 @@
 use crate::matcher::Any;
-use hdt::{Hdt, HdtGraph};
+use hdt::Hdt;
 use regex::Regex;
 use sophia::api::graph::*;
 use sophia::api::ns::rdf;
@@ -55,7 +55,7 @@ fn task_query_hdt<R>(f: R, query_num: usize)
 where R: io::BufRead {
     let m0 = get_vmsize();
     let t0 = OffsetDateTime::now_utc();
-    let hdt = Hdt::new(std::io::BufReader::new(f)).expect("error loading HDT");
+    let hdt = Hdt::read(std::io::BufReader::new(f)).expect("error loading HDT");
     let t1 = OffsetDateTime::now_utc();
     let m1 = get_vmsize();
     let time_parse = (t1 - t0).as_seconds_f64();
@@ -116,8 +116,7 @@ fn task_query_sophia_hdt<R>(f: R, query_num: usize)
 where R: io::BufRead {
     let m0 = get_vmsize();
     let t0 = OffsetDateTime::now_utc();
-    let hdt = Hdt::new(std::io::BufReader::new(f)).expect("error loading HDT");
-    let g = HdtGraph::new(hdt);
+    let g = Hdt::read(std::io::BufReader::new(f)).expect("error loading HDT");
     let t1 = OffsetDateTime::now_utc();
     let m1 = get_vmsize();
     let time_parse = (t1 - t0).as_seconds_f64();
@@ -150,10 +149,10 @@ where R: io::BufRead {
     let queer = BoxTerm::new_literal_lang_unchecked("genderqueer", "en");
     */
     let mut t0 = OffsetDateTime::now_utc();
-    let results = match query_num {
-        1 => g.triples_matching(Any, Some(rdf::type_), Some(dbo_person)),
-        2 => g.triples_matching(Some(dbr_vincent), Any, Any),
-        3 => g.triples_matching(Some(dbr_vincent), Some(rdf::type_), Any),
+    let results: Box<dyn Iterator<Item = _>> = match query_num {
+        1 => Box::new(g.triples_matching(Any, Some(rdf::type_), Some(dbo_person))),
+        2 => Box::new(g.triples_matching(Some(dbr_vincent), Any, Any)),
+        3 => Box::new(g.triples_matching(Some(dbr_vincent), Some(rdf::type_), Any)),
         /*
         4 => g.triples_with_p(Some(dbo_gender)),
         5 => g.triples_with_p(Some(dbo_birthplace)),
@@ -208,9 +207,9 @@ where
         SimpleTerm::Iri(IriRef::new_unchecked("http://dbpedia.org/resource/Vincent_Descombes_Sevoie".into()));
 
     let mut t0 = OffsetDateTime::now_utc();
-    let results = match query_num {
-        1 => g.triples_matching(Any, Some(rdf::type_), Some(dbo_person)),
-        _ => g.triples_matching(Some(dbr_vincent), Any, Any),
+    let results: Box<dyn Iterator<Item = _>> = match query_num {
+        1 => Box::new(g.triples_matching(Any, Some(rdf::type_), Some(dbo_person))),
+        _ => Box::new(g.triples_matching(Some(dbr_vincent), Any, Any)),
     };
 
     let mut c = 0;
@@ -261,7 +260,7 @@ fn task_parse_hdt(filename: &str) {
     let f = fs::File::open(&filename.replace("ttl", "hdt")).expect("Error opening file");
     let f = io::BufReader::new(f);
     let t0 = OffsetDateTime::now_utc();
-    hdt::Hdt::new(f).unwrap();
+    hdt::Hdt::read(f).unwrap();
     //t::parse_bufread(f).for_each_triple(|_| ()).expect("Error parsing NT file");
     let t1 = OffsetDateTime::now_utc();
     let time_parse = (t1 - t0).as_seconds_f64();
