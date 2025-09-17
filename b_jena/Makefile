@@ -1,5 +1,5 @@
 # the jena maintainers seem to remove old versions, you may have to update the version to get the download to work
-JENA=apache-jena-5.0.0
+JENA=apache-jena-5.5.0
 
 .PHONY: all
 all: build test
